@@ -27,8 +27,8 @@ import { sample2 } from './timeline2.js';
 import { damp, clamp } from '../lib/ease.js';
 
 const TOOLS = [
-  'photoshop', 'figma', 'aftereffects', 'premiere', 'notion', 'lightroom',
-  'claude', 'chatgpt', 'midjourney', 'spline', 'framer', 'webflow',
+  'meta', 'googleads', 'seo', 'gmb', 'botpress', 'vapi',
+  'claude', 'chatgpt', 'davinci', 'photoshop', 'nextjs', 'analytics',
 ];
 
 const CORNERS = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
@@ -130,8 +130,10 @@ export class Universe {
       // defeats the point of the section
       sizeMul: tall ? 0.95 : (narrow ? 0.9 : 1),
     });
+    // he holds the centre of the room: on desktop his height is most of the
+    // frame, on a phone he steps back so the card shell keeps the stage
     this.fig = layoutFigure(aspect, FOV, CAM_Z,
-      tall ? 0.36 : 0.60, tall ? 0.605 : 0.60, tall ? 0.50 : 0.62);
+      tall ? 0.40 : 0.70, tall ? 0.64 : 0.655, tall ? 0.50 : 0.62);
     // the ring is measured against the SHORTER edge, or it overflows a phone
     this.ringScale = tall ? 0.60 : 1.0;
   }
@@ -256,7 +258,7 @@ export class Universe {
       gl.uniform1i(pr.u.uFig, bind(gl, this.tex.figure, 0));
       gl.uniform1i(pr.u.uGrain, bind(gl, this.tex.grain, 1));
       gl.uniform1f(pr.u.uOpacity, s.wake);
-      gl.uniform1f(pr.u.uRim, 0.55 + 0.75 * s.ring);
+      gl.uniform1f(pr.u.uRim, 1.0 + 1.1 * s.ring);
       gl.uniform2f(pr.u.uLightDir, 0.35, 0.55);
       gl.uniform1f(pr.u.uTime, t);
       gl.bindVertexArray(this.quad);

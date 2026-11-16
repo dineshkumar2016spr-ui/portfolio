@@ -1,10 +1,10 @@
 /* ==========================================================================
-   Scene two — the creative universe.
-   This is the supplied film played AS the section, not a recreation of it:
-   the cards, the red light-painting, the embers and every corner label are
-   part of the footage. The page's job is to present it cinematically — arrive
-   from black, hold the frame, and breathe over the loop seam — and to stay
-   out of its way.
+   Scene two — the growth universe.
+   The room is drawn live (src/scene2/universe.js): the cards, the red
+   light-painting, the embers and the figure are all rendered per frame, so
+   the section scales to any viewport and answers the pointer. The page's job
+   is to present it cinematically — arrive from black, hold the frame, and
+   stay out of its way.
    ========================================================================== */
 
 .flow {
@@ -28,20 +28,17 @@
   box-shadow: 0 -1px 0 0 #000;
 }
 
-#uniFilm {
+#uniStage {
   position: absolute;
   inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
-  /* the film is 16:9; any other viewport crops rather than letterboxes,
-     keeping the figure centred and the frame full-bleed */
-  object-fit: cover;
-  object-position: 50% 42%;
   opacity: 0;
   transform: scale(1.045);
   transition: opacity 1.9s var(--ease-out), transform 3.2s var(--ease-out);
 }
-.universe.is-on #uniFilm {
+.universe.is-on #uniStage {
   opacity: 1;
   transform: scale(1);
 }
@@ -118,10 +115,11 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: #000 url('../../public/media/universe.jpg') center / cover no-repeat;
+  background: #050303 radial-gradient(58% 46% at 50% 46%,
+    rgba(150, 24, 18, 0.55) 0%, rgba(60, 8, 7, 0.6) 42%, #000 78%) no-repeat;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #uniFilm, .universe__title { transition-duration: 0.01ms; transition-delay: 0s; transform: none; }
+  #uniStage, .universe__title { transition-duration: 0.01ms; transition-delay: 0s; transform: none; }
   .universe.is-on .universe__title { transform: translate(-50%, 0); }
 }

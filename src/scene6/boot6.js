@@ -43,12 +43,11 @@ export async function initFinale() {
   const frame2Img = document.getElementById('finFrame2Img');
   let frame2Ready = false;
   if (frame2 && frame2Img) {
-    // canonical home first, then the naming pattern the reference images
-    // use; while the image is absent each miss logs one benign 404
+    // the closing still is rendered by tools/build_content.py; the older
+    // naming patterns are only a fallback while that file is missing
     const candidates = [
-      'footer%202nd%20image.jpg',
       'public/fin/frame2.jpg',
-      'Footer%20image%202.jpg',
+      'footer%202nd%20image.jpg',
     ];
     (function tryNext(i) {
       if (i >= candidates.length) return;

@@ -1,1 +1,13 @@
 shots/
+
+# scratch spaces: review screenshots, contact sheets, temp scripts
+.freebuff/
+
+# python build leftovers
+__pycache__/
+*.pyc
+
+# source material that stays on the machine (the encoded hero + the pipeline
+# copy in assets_src/ are what the site and the build tools actually use)
+Man_walking_in_formal_suit_5325956b.mp4
+Saripalli Dinesh Kumar - Executive Resume.pdf

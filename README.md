@@ -1,15 +1,16 @@
-# GIREESH — cinematic portfolio
+# DINESH — cinematic portfolio
 
-Two scenes so far, both WebGL, no frameworks and no build step.
+A digital marketer's portfolio in four WebGL scenes, no frameworks and no build
+step.
 
-**Scene 1 — the opening.** Black screen → the man walks out of the dark → the
-GIREESH wordmark materialises behind him → chips, arrows and dots snap into
+**Scene 1 — the opening.** Black screen → he walks out of the dark → the
+DINESH wordmark materialises behind him → chips, arrows and dots snap into
 place → header draws itself in → the composition settles and breathes.
 
-**Scene 2 — the creative universe.** The supplied film, played as the section:
-the visitor scrolls into it, it arrives from black, and a veil breathes over
-the 10-second loop point so the wrap is never seen as a cut. Decoding stops
-whenever the section is off screen.
+**Scene 2 — the growth universe.** A live room, not a film: twelve cards carry
+his own tools (Meta, Google Ads, Botpress, Vapi, DaVinci, Photoshop, Next.js…),
+a red light-painting weaves between them and around his silhouette, and the
+whole scene answers the pointer. It plays once on arrival, then holds.
 
 **Scene 3 — the time machine.** A warm black room → the timeline rail draws
 itself → a giant clock resolves → six year cards arrive → the floor mechanism

@@ -1,12 +1,12 @@
-// The finale's two canvases, both carrying the reference's own pixels.
+// The finale's two canvases, both built from his own footage and type.
 //
-//   back   the plate (wordmark + red fog + his smoke), staged and breathing
-//   front  the man, matted out of the artwork, plus a quiet veil of
-//          foreground smoke
+//   back   the plate (DINESH wordmark + red fog), staged and breathing
+//   front  the man, matted out of the walk, plus a quiet veil of foreground
+//          smoke
 //
-// Both layers use the same cover mapping, so at rest the reassembly is the
-// reference image exactly; the split is what buys the reveal and the few
-// pixels of parallax depth between him, the title and the fog.
+// Both layers use the same cover mapping, so at rest the reassembly is one
+// composed image; the split is what buys the reveal and the few pixels of
+// parallax depth between him, the title and the fog.
 
 import { program, unitQuad, texture, upload, bind, loadImage } from '../gl/renderer.js';
 import { V6, F6_PLATE, F6_MAN, F6_SMOKE } from '../gl/shaders6.js';

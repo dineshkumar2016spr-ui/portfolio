@@ -1,4 +1,4 @@
-// Renders GIREESH into a single coverage texture and reports the ink rectangle
+// Renders DINESH into a single coverage texture and reports the ink rectangle
 // of every individual letter.
 //
 // Why a texture and not DOM text: the two people who live inside the G and the H
@@ -7,16 +7,16 @@
 // by even a subpixel, at any size or device pixel ratio.
 //
 // The reference artwork is set in a compressed heavy grotesque. Anton is the
-// closest widely available face but is naturally wider, so a single horizontal
-// scale is solved for at runtime to hit the reference's measured
-// word-width : cap-height ratio. One uniform scale keeps the letterforms
-// consistent with each other; per-letter fitting would distort the I into a slab
-// while squeezing the E, which is what makes lettering look counterfeit.
+// closest widely available face; the ratio below is Anton's OWN natural ink
+// width : cap height for this word, measured in the browser, so the live
+// wordmark is drawn without any horizontal squeeze at all. The layout code
+// still fits the word to the viewport, which keeps the reference composition
+// whatever the ratio happens to be.
 
-const TEXT = 'GIREESH';
+const TEXT = 'DINESH';
 
-// measured from the supplied hero artwork: ink width / cap height
-export const TARGET_RATIO = 3.121;
+// Anton, measured: ink width / cap height for DINESH (scaleX = 1)
+export const TARGET_RATIO = 2.8729;
 
 function ctx2d(w, h) {
   const c = document.createElement('canvas');

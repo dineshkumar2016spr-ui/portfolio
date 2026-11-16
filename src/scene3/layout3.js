@@ -12,33 +12,33 @@
 export const YEARS = [
   {
     year: 2021,
-    key: 'Beginning',
-    lines: ['New city', 'New chapter', 'Bigger dreams'],
+    key: 'Foundations',
+    lines: ['Nursing college', 'First edits', 'A borrowed camera'],
   },
   {
     year: 2022,
-    key: 'Exploration',
-    lines: ['Learned design', 'Found direction'],
+    key: 'The craft',
+    lines: ['Shooting video', 'Cutting reels', 'Learning design'],
   },
   {
     year: 2023,
     key: 'Practice',
-    lines: ['Built skills', 'Made projects', 'Kept going'],
+    lines: ['Freelance edits', 'Photoshop nights', 'DaVinci Resolve'],
   },
   {
     year: 2024,
-    key: 'Growth',
-    lines: ['Real projects', 'Real people', 'Real learning'],
+    key: 'Camera & cut',
+    lines: ['Sony ZV-E10', 'Brand videos', 'First campaigns'],
   },
   {
     year: 2025,
-    key: 'Opportunities',
-    lines: ['Collaborated', 'Solved problems', 'Stepped up'],
+    key: 'Performance',
+    lines: ['Meta ads', 'Lead forms', 'Local SEO'],
   },
   {
     year: 2026,
-    key: 'Next chapter',
-    lines: ['Bigger goals', 'More impact', 'Still designing'],
+    key: 'Building now',
+    lines: ['Six brands', 'AI-built apps', 'SoulSync live'],
   },
 ];
 

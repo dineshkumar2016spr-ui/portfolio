@@ -256,8 +256,8 @@ def frame_alpha(bgr, cfg):
     # is in 0..255^2 units and a small eps makes guidedFilter divide 0/0 across
     # the large flat backdrop, which comes back as NaN.
     guide = (cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0)
-    a = cv2.ximgproc.guidedFilter(guide, a.astype(np.float32),
-                                  cfg["gf_radius"], cfg["gf_eps"])
+    a = guided_filter(guide, a.astype(np.float32), cfg["gf_radius"],
+                      cfg["gf_eps"])
     a = np.nan_to_num(a, nan=0.0, posinf=1.0, neginf=0.0)
     a = np.clip(a, 0.0, 1.0)
     a = np.clip((a - cfg["choke"]) / max(1e-6, 1.0 - cfg["choke"]), 0.0, 1.0)
@@ -352,7 +352,163 @@ def despill(bgr, a, bg_bgr, cfg):
 # presets
 # --------------------------------------------------------------------------- #
 
+# --------------------------------------------------------------------------- #
+# checker-plate footage
+#
+# Some stock clips ship with the transparency CHECKER baked into the picture
+# (grey squares, h264, no alpha channel). The white-cyclorama key above cannot
+# see a two-tone plate: its quadratic surface would sit between the two levels
+# and half the backdrop would read as subject. So the plate is modelled as two
+# smooth LEVEL fields - the dark squares and the light squares - and a pixel is
+# backdrop when it sits on either of them AND carries the plate's own high
+# frequency texture. The texture test is what keeps a shadowed cheek, a dark
+# tie or the trouser grain from being mistaken for backdrop, since all three
+# land on a level but none of them flickers at the checker's period.
+# --------------------------------------------------------------------------- #
+
+def guided_filter(I, p, r, eps):
+    """Self-guided box filter (cv2.ximgproc is not always installed)."""
+    def box(x):
+        return cv2.boxFilter(x, -1, (2 * r + 1, 2 * r + 1), normalize=True,
+                             borderType=cv2.BORDER_REFLECT)
+    mI, mp = box(I), box(p)
+    var = box(I * I) - mI * mI
+    cov = box(I * p) - mI * mp
+    a = cov / (var + eps)
+    b = mp - a * mI
+    return box(a) * I + box(b)
+
+
+def checker_levels(gray, chroma):
+    """Fit the plate's two levels as smooth fields over the whole clip.
+
+    A local mean is useless as the reference: behind the figure the window is
+    mostly figure, so the mean collapses toward the suit and the light squares
+    stop looking like backdrop at all. The mid level is seeded from the frame
+    border instead (never occupied), then each level is refined only from
+    pixels that actually sit ON it, and the fields are extrapolated smoothly
+    across the subject - sound, because the studio light drifts over hundreds
+    of pixels, not dozens.
+    """
+    h, w = gray.shape
+    ring = border_ring((h, w), 90).astype(bool)
+    ring &= chroma < 8.0
+    if ring.sum() < 256:
+        ring = border_ring((h, w), 24).astype(bool)
+    mid = fit_bg_plate(gray, ring.astype(np.uint8), order=2)
+    amp0 = 0.5 * (np.percentile(gray[ring], 90) - np.percentile(gray[ring], 10))
+    D, L = mid - amp0, mid + amp0
+    for _ in range(9):
+        dD, dL = np.abs(gray - D), np.abs(gray - L)
+        valid = ((np.minimum(dD, dL) < 26) & (chroma < 10)).astype(np.float32)
+        wd = np.exp(-(dD ** 2) / (2 * 7.0 ** 2)) * valid
+        wl = np.exp(-(dL ** 2) / (2 * 7.0 ** 2)) * valid
+
+        def nc(img, wg):
+            a = cv2.GaussianBlur(img * wg, (0, 0), 36.0)
+            b = cv2.GaussianBlur(wg, (0, 0), 36.0)
+            return a / np.maximum(b, 1e-3), b
+        Dn, bd = nc(gray, wd)
+        Ln, bl = nc(gray, wl)
+        D = np.where(bd > 1e-3, Dn, D)
+        L = np.where(bl > 1e-3, Ln, L)
+    return D.astype(np.float32), L.astype(np.float32)
+
+
+def frame_alpha_checker(bgr, cfg, D, L):
+    """Alpha against a two-tone checker plate (see the section note above)."""
+    h, w = bgr.shape[:2]
+    sm = cv2.GaussianBlur(bgr, (0, 0), 0.7)
+    lab = cv2.cvtColor(sm, cv2.COLOR_BGR2LAB).astype(np.float32)
+    Y = lab[:, :, 0]
+    ch = np.sqrt((lab[:, :, 1] - 128) ** 2 + (lab[:, :, 2] - 128) ** 2)
+    dD, dL = np.abs(Y - D), np.abs(Y - L)
+    dist = np.minimum(dD, dL) + ch * cfg["w_chroma"]
+    plate = np.where(dD <= dL, D, L)
+
+    k = cfg["tex_win"]
+    mu = cv2.boxFilter(Y, -1, (k, k), borderType=cv2.BORDER_REFLECT)
+    var = cv2.boxFilter(Y * Y, -1, (k, k),
+                        borderType=cv2.BORDER_REFLECT) - mu * mu
+    std = np.sqrt(np.maximum(var, 0))
+
+    bg_bin = ((dist < cfg["bg_thr"]) & (std > cfg["tex_thr"])).astype(np.uint8)
+    bg_bin = cv2.morphologyEx(bg_bin, cv2.MORPH_OPEN,
+                             np.ones((5, 5), np.uint8))
+    # No border-connectivity requirement: the strip of backdrop between a
+    # walking man's legs is enclosed on every side and is still backdrop. The
+    # checker texture is the discriminator here, not the topology.
+    n, lab_c, stats, _c = cv2.connectedComponentsWithStats(bg_bin, 8)
+    keep = [i for i in range(1, n)
+            if stats[i, cv2.CC_STAT_AREA] >= cfg["bg_min_area"]]
+    bg_bin = (np.isin(lab_c, keep).astype(np.uint8) if keep
+              else np.zeros_like(bg_bin))
+    bg_bin = cv2.morphologyEx(bg_bin, cv2.MORPH_CLOSE,
+                             np.ones((5, 5), np.uint8))
+    bg = bg_bin.astype(bool)
+
+    # The ramp's floor is the LOCAL residual: on bare backdrop dist never
+    # reaches zero (the plate is a smooth two-level model, not an exact
+    # reconstruction), and a fixed floor would read a thin dark hand as half
+    # background.
+    wgt = bg.astype(np.float32)
+    num = cv2.GaussianBlur(dist * wgt, (0, 0), 26.0)
+    den = cv2.GaussianBlur(wgt, (0, 0), 26.0)
+    resid = np.where(den > 1e-3, num / np.maximum(den, 1e-3),
+                     float(np.median(dist[bg])) if bg.any() else 0.0)
+    lo = resid + cfg["ramp"]
+    a_soft = np.clip((dist - lo) / np.maximum(cfg["fg_thr"] - lo, 1e-3),
+                     0.0, 1.0).astype(np.float32)
+    a_soft = a_soft * a_soft * (3.0 - 2.0 * a_soft)
+
+    r = cfg["band"]
+    grown = cv2.dilate(bg_bin, cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))).astype(bool)
+    a = np.where(bg, 0.0, np.where(~grown, 1.0, a_soft))
+
+    guide = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0
+    a = np.clip(np.nan_to_num(guided_filter(guide, a, cfg["gf_radius"],
+                                            cfg["gf_eps"])), 0.0, 1.0)
+    a = smoothstep(cfg["out_lo"], cfg["out_hi"], a).astype(np.float32)
+    bg_bgr = np.repeat(np.clip(plate, 0, 255)[..., None], 3, axis=2)
+    return a, bg_bgr
+
+
+def checker_plate_levels(src, start, end, stride=3):
+    """Median frame of the clip -> the two plate level fields."""
+    cap = cv2.VideoCapture(src)
+    gray, col = [], []
+    i = 0
+    while True:
+        ok, fr = cap.read()
+        if not ok:
+            break
+        if i >= start and i < end and (i - start) % stride == 0:
+            gray.append(cv2.cvtColor(fr, cv2.COLOR_BGR2GRAY))
+            small = cv2.resize(fr, (fr.shape[1] // 2, fr.shape[0] // 2),
+                               interpolation=cv2.INTER_AREA)
+            col.append(small)
+        elif i >= end:
+            break
+        i += 1
+    cap.release()
+    if not gray:
+        raise SystemExit("no frames in range for the checker plate fit")
+    med = np.median(np.stack(gray, 0), 0).astype(np.float32)
+    medc = np.median(np.stack(col, 0), 0).astype(np.uint8)
+    labm = cv2.cvtColor(medc, cv2.COLOR_BGR2LAB).astype(np.float32)
+    chroma_s = np.sqrt((labm[:, :, 1] - 128) ** 2 + (labm[:, :, 2] - 128) ** 2)
+    chroma = cv2.resize(chroma_s, (med.shape[1], med.shape[0]),
+                        interpolation=cv2.INTER_LINEAR)
+    return checker_levels(med, chroma)
+
+
 PRESETS = {
+    # dark suit on a BAKED TRANSPARENCY CHECKER plate (grey, h264, no alpha)
+    "suite": dict(mode="checker", w_chroma=2.2, bg_thr=26, fg_thr=46,
+                  band=24, ramp=5.0, tex_win=11, tex_thr=9.0, bg_min_area=120,
+                  gf_radius=5, gf_eps=1e-4, out_lo=0.12, out_hi=0.86,
+                  despill=1.0, unmul_floor=0.22, ema=0.55),
     # dark suit on bright cyclorama, subject walks toward camera
     "v1": dict(ring=14, ring_min_L=150, w_lum=1.0, w_chroma=1.6, lo=12, hi=46,
                bg_thr=10, fg_thr=52, edge_barrier=0, seed_edges="ltrb",
@@ -413,6 +569,10 @@ def process(src, preset, out_w, out_h, outdir, name, trim=None, qa=None,
     start, end = trim or (0, total)
     end = min(end, total)
 
+    levels = None
+    if cfg.get("mode") == "checker":
+        levels = checker_plate_levels(src, start, end)
+
     pw, ph = out_w * 2, out_h
     mp4 = os.path.join(outdir, name + ".mp4")
     webm = os.path.join(outdir, name + ".webm")
@@ -437,7 +597,8 @@ def process(src, preset, out_w, out_h, outdir, name, trim=None, qa=None,
             break
         if i < start:
             continue
-        a, bg_bgr = frame_alpha(fr, cfg)
+        a, bg_bgr = (frame_alpha_checker(fr, cfg, levels[0], levels[1])
+                     if levels else frame_alpha(fr, cfg))
         if prev is not None:
             # Temporal smoothing must be MOTION-ADAPTIVE. A fixed EMA holds
             # 45% of the previous matte, so a fast-stepping foot drags a ghost

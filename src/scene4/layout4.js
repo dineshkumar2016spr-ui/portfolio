@@ -1,7 +1,8 @@
-// Scene four's measured geometry — every number read off the supplied
-// reference (section 4 image.jpg, 1600x900), which is the source of truth.
-// The card sprites and the environment plate are cut from that image by
-// tools/extract_s4.py; this module records where each piece goes back.
+// Scene four's measured geometry — every box, depth and tint read off the
+// reference composition (1600x900), which stays the source of truth for the
+// room. The environment plate comes from that frame; the twelve posters are
+// drawn by tools/build_content.py at exactly these box aspects, so this list
+// also decides what each poster is. Re-run that script after editing it.
 //
 // Coordinates are reference-frame pixels. fitCover() maps the frame onto the
 // viewport the way the plate shader does (cover: fill, centre-anchored), so
@@ -10,40 +11,40 @@
 export const FRAME = [1600, 900];
 
 export const CARDS = [
-  { id: 'p01_timeless', title: 'Timeless Experiences',
+  { id: 'p01_soulsync', title: 'SoulSync',
     box: [213, 72, 384, 273], depth: 0.45,
     tint: [0.309, 0.334, 0.382] },
-  { id: 'p02_game', title: 'More Than A Game',
+  { id: 'p02_podcast', title: 'Health Care Talks',
     box: [63, 251, 428, 269], depth: 0.25,
     tint: [0.249, 0.267, 0.295] },
-  { id: 'p03_build', title: 'Build Without Limits',
+  { id: 'p03_jewellery', title: 'Fefa Jewellery',
     box: [566, 41, 471, 288], depth: 0.6,
     tint: [0.414, 0.291, 0.291] },
-  { id: 'p04_driven', title: 'Driven by Better Design',
+  { id: 'p04_rex', title: 'Rex Hospitals',
     box: [998, 95, 460, 377], depth: 0.45,
     tint: [0.322, 0.278, 0.261] },
-  { id: 'p05_ideas', title: 'Your Ideas In Motion',
+  { id: 'p05_heartlink', title: 'Heartlink Hospitals',
     box: [394, 358, 232, 198], depth: 0.8,
     tint: [0.39, 0.303, 0.234] },
-  { id: 'p06_sound', title: 'Sound & Second Motion',
+  { id: 'p06_caayara', title: 'Caayara Mobiles',
     box: [568, 364, 173, 203], depth: 0.9,
     tint: [0.336, 0.324, 0.333] },
-  { id: 'p07_food', title: 'Good Food Brighter Moods',
+  { id: 'p07_osdev', title: 'OS Developers',
     box: [698, 366, 211, 204], depth: 1.0,
     tint: [0.336, 0.243, 0.217] },
-  { id: 'p08_travel', title: 'Travel Explore Belong',
+  { id: 'p08_buildingblocks', title: 'Building Blocks',
     box: [844, 370, 195, 206], depth: 0.9,
     tint: [0.26, 0.32, 0.366] },
-  { id: 'p09_space', title: 'Find Your Space',
+  { id: 'p09_growthora', title: 'Growthora',
     box: [988, 364, 231, 208], depth: 0.8,
     tint: [0.336, 0.283, 0.269] },
-  { id: 'p10_play', title: 'Play Create Repeat',
+  { id: 'p10_reels', title: 'Reels & Films',
     box: [1181, 251, 355, 242], depth: 0.3,
     tint: [0.448, 0.305, 0.235] },
-  { id: 'p11_cleaner', title: 'Designing A Cleaner Tomorrow',
+  { id: 'p11_medical', title: 'Medical Video',
     box: [118, 467, 345, 243], depth: 0.1,
     tint: [0.311, 0.339, 0.263] },
-  { id: 'p12_steps', title: 'Small Steps Big Change',
+  { id: 'p12_automation', title: 'AI Automations',
     box: [1139, 478, 325, 234], depth: 0.1,
     tint: [0.31, 0.317, 0.302] },
 ];

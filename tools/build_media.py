@@ -29,7 +29,7 @@ TEX = os.path.join(ROOT, "public", "tex")
 # sources stay in assets_src/ and their presets stay in matte.py, so re-enabling
 # either is a one-line change plus a rebuild.
 CLIPS = [
-    ("hero", "v1.mp4", "v1", 720, 1280, 0, 240),
+    ("hero", "dinesh.mp4", "suite", 720, 1280, 0, 190),
     # ("letter_g", "v2.mp4", "v2", 540, 960, 0, 240),
     # ("letter_h", "v3.mov", "v3", 540, 960, 0, 190),
 ]
@@ -183,26 +183,10 @@ def build_grain():
     cv2.imwrite(os.path.join(TEX, "grain.png"), (n * 255).astype(np.uint8))
 
 
-def stage_universe_film():
-    """Scene two plays the supplied reference film directly. The video stream
-    is copied untouched - only the audio track is dropped and the moov atom
-    moved to the front so playback can start before the file finishes."""
-    src = os.path.join(ROOT, "section 2 refrence video.mp4")
-    dst = os.path.join(MEDIA, "universe.mp4")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", src,
-                    "-c:v", "copy", "-an", "-movflags", "+faststart", dst],
-                   check=True)
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", dst,
-                    "-frames:v", "1", "-q:v", "4",
-                    os.path.join(MEDIA, "universe.jpg")], check=True)
-    print("  universe film staged (%d KB)" % (os.path.getsize(dst) // 1024))
-
-
 def main():
     os.makedirs(MEDIA, exist_ok=True)
     build_grunge()
     build_grain()
-    stage_universe_film()
     print("textures written")
 
     manifest = {"clips": {}}

@@ -195,15 +195,15 @@ void main(){
   if(luv.x > 0.0 && luv.x < 1.0 && luv.y > 0.0 && luv.y < 1.0){
     vec4 lg = texture(uLogo, vec2(luv.x, 1.0 - luv.y));
     // the artwork brightens under the cursor without changing hue
-    vec3 lc = lg.rgb * (1.0 + uHover * 0.55);
-    col = mix(col, lc, lg.a * mix(0.55, 1.0, uMat));
+    vec3 lc = lg.rgb * (1.0 + uHover * 0.55) * 1.18;
+    col = mix(col, lc, lg.a * mix(0.72, 1.0, uMat));
   }
 
   float g = texture(uGrain, gl_FragCoord.xy / 512.0 + vec2(uTime * 0.01, 0.0)).r;
   col += (g - 0.5) * 0.030;
 
   // distance haze: far cards sit back into the room's atmosphere
-  float haze = clamp((vDepth - 3.0) / 9.0, 0.0, 0.62);
+  float haze = clamp((vDepth - 3.0) / 13.0, 0.0, 0.28);
   col = mix(col, vec3(0.030, 0.012, 0.016), haze);
 
   float a = face * uOpacity;
@@ -362,7 +362,7 @@ void main(){
   if(a <= 0.004) discard;
 
   // he is a silhouette: the photograph's own tone is crushed almost to nothing
-  vec3 col = s.rgb * 0.085;
+  vec3 col = s.rgb * 0.19;
 
   // rim light from the core behind him. Sampling the matte's own gradient means
   // the highlight rides his actual outline instead of a guessed edge band.
